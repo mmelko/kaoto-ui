@@ -11,7 +11,7 @@ import {
   RedoIcon,
   UndoIcon,
 } from '@patternfly/react-icons';
-import { ReactNode, useEffect, useRef } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import EditorDidMount from 'react-monaco-editor';
 import { useDebouncedCallback } from 'use-debounce';
 
@@ -21,7 +21,7 @@ interface ISourceCodeEditor {
   theme?: string;
   mode?: CodeEditorMode | CodeEditorMode.FREE_EDIT;
   editable?: boolean | false;
-  editAction?: (code: string, event?: any) => void;
+  //01editAction?: (code: string, event?: any) => void;+-\
   syncAction?: () => {};
 }
 
@@ -48,25 +48,26 @@ const SourceCodeEditor = (props: ISourceCodeEditor) => {
    * On detected changes to YAML state, issue POST to external endpoint
    * Returns JSON to be displayed in the visualization
    */
+  //refactor of working this .. set sourcecode at first
   const handleChanges = (incomingData: string) => {
-    if (sourceCode !== incomingData) {
-      setSourceCode(incomingData);
+    // if (sourceCode !== incomingData) {
+    //setSourceCode(incomingData);
 
-      // update integration JSON state with changes
-      fetchIntegrationJson(incomingData, settings.dsl.name)
-        .then((res: IIntegration) => {
-          let tmpInt = res;
-          if (typeof res.metadata?.name === 'string' && res.metadata.name !== '') {
-            settings.name = res.metadata.name;
-            setSettings({ name: res.metadata.name });
-          }
-          tmpInt.metadata = { ...res.metadata, ...settings };
-          updateIntegration(tmpInt);
-        })
-        .catch((e) => {
-          console.error(e);
-        });
-    }
+    // update integration JSON state with changes
+    fetchIntegrationJson(incomingData, settings.dsl.name)
+      .then((res: IIntegration) => {
+        let tmpInt = res;
+        if (typeof res.metadata?.name === 'string' && res.metadata.name !== '') {
+          settings.name = res.metadata.name;
+          setSettings({ name: res.metadata.name });
+        }
+        tmpInt.metadata = { ...res.metadata, ...settings };
+        updateIntegration(tmpInt);
+      })
+      .catch((e) => {
+        console.error(e);
+      });
+    //  }
   };
 
   const handleEditorDidMount = (editor: EditorDidMount['editor']) => {
@@ -100,7 +101,10 @@ const SourceCodeEditor = (props: ISourceCodeEditor) => {
 
   const debounced = useDebouncedCallback((value: string) => {
     // if editor is in read only mode file can be still uploaded.
+    setSourceCode(value);
+    console.log('updating');
     if (props.mode !== CodeEditorMode.FREE_EDIT) {
+      editorRef.current?.getMode;
       handleChanges(value);
     }
   }, 1000);
@@ -132,16 +136,20 @@ const SourceCodeEditor = (props: ISourceCodeEditor) => {
       tooltipProps={{ content: 'Clear', position: 'right' }}
     />
   );
-  const EditButton = (
-    <CodeEditorControl
-      key={'editButton'}
-      icon={<PencilAltIcon color="#0066CC" />}
-      data-testid={'sourceCode--editButton'}
-      onClick={props.editAction ?? (() => {})}
-      isVisible={props.mode === CodeEditorMode.FREE_EDIT}
-      tooltipProps={{ content: 'Edit the source code', position: 'right' }}
-    />
-  );
+  // const EditButton = (
+  //   <CodeEditorControl
+  //     key={'editButton'}
+  //     icon={<PencilAltIcon color="#0066CC" />}
+  //     data-testid={'sourceCode--editButton'}
+  //     onClick={() => {
+  //     setEditorMode(CodeEditorMode.FREE_EDIT);
+  //    // setEditable(true);
+  //     console.log('setting mode');
+  //     }}
+  //     isVisible={props.mode === CodeEditorMode.FREE_EDIT}
+  //     tooltipProps={{ content: 'Edit the source code', position: 'right' }}
+  //   />
+  //);
 
   const UndoButton = (
     <CodeEditorControl
@@ -179,12 +187,12 @@ const SourceCodeEditor = (props: ISourceCodeEditor) => {
     />
   );
 
-  let customControls: ReactNode[] = [EditButton];
-  if (props.mode === CodeEditorMode.TWO_WAY_SYNC) {
-    customControls = [UndoButton, RedoButton, ClearButton];
-  } else if (props.mode === CodeEditorMode.FREE_EDIT && props.editable) {
-    customControls = [UndoButton, RedoButton, ClearButton, UpdateButton];
-  }
+  // let customControls: ReactNode[] = [EditButton];
+  // if (props.mode === CodeEditorMode.TWO_WAY_SYNC) {
+  //   customControls = [UndoButton, RedoButton, ClearButton];
+  // } else if (props.mode === CodeEditorMode.FREE_EDIT) {
+  //   customControls = [UndoButton, RedoButton, ClearButton, UpdateButton];
+  // }
 
   return (
     <StepErrorBoundary>
@@ -197,15 +205,15 @@ const SourceCodeEditor = (props: ISourceCodeEditor) => {
         language={Language.yaml}
         onEditorDidMount={handleEditorDidMount}
         toolTipPosition="right"
-        customControls={customControls}
-        isCopyEnabled
+        customControls={[UndoButton, RedoButton, ClearButton, UpdateButton]}
         isDarkTheme
         isDownloadEnabled
+        //onStart
         isLanguageLabelVisible
         allowFullScreen={true}
         isUploadEnabled
         options={{
-          readOnly: props.mode === CodeEditorMode.READ_ONLY || !props.editable,
+          readOnly: props.mode === CodeEditorMode.READ_ONLY,
           scrollbar: {
             horizontal: 'visible',
             vertical: 'visible',

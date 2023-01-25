@@ -53,11 +53,11 @@ const Dashboard = () => {
       <SourceCodeEditor
         mode={settings.editorMode}
         // we want to have editable editor in TWO_WAY_SYNC mode
-        editable={settings.editorMode === CodeEditorMode.TWO_WAY_SYNC}
-        editAction={() => {
-          setLeftDrawerExpanded(false);
-          setCodeEditMode(true);
-        }}
+        editable={true}
+        // editAction={() => {
+        //   setLeftDrawerExpanded(false);
+        //   setCodeEditMode(true);
+        // }}
       />
     </DrawerContentBody>
   );
